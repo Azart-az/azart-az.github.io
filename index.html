@@ -299,4 +299,101 @@
                 img.loading = 'lazy';
 
                 if (item.type === 'video') {
-                    a
+                    a.classList.add('video');
+                    img.src = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
+                    img.alt = 'Видео';
+                } else {
+                    img.src = item.src;
+                    img.alt = `Фото ${item.number}`;
+                }
+
+                a.appendChild(img);
+
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentIndex = index;
+                    showMedia(currentIndex);
+                });
+
+                gallery.appendChild(a);
+            });
+
+            console.log('Загружено фото:', imageNumbers.length);
+        }
+
+        function showMedia(index) {
+            if (!mediaList[index]) return;
+
+            const item = mediaList[index];
+            const captionEl = lightboxCaption;
+            lightboxContent.innerHTML = '';
+            lightboxContent.appendChild(captionEl);
+
+            captionEl.textContent = '';
+            captionEl.classList.remove('visible');
+
+            if (item.type === 'video') {
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube-nocookie.com/embed/${item.id}?autoplay=1&rel=0`;
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                iframe.allowFullscreen = true;
+                iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                iframe.setAttribute('frameborder', '0');
+                lightboxContent.insertBefore(iframe, captionEl);
+
+                if (item.after && captions[item.after]) {
+                    captionEl.textContent = captions[item.after];
+                    captionEl.classList.add('visible');
+                }
+            } else {
+                const img = document.createElement('img');
+                img.src = item.src;
+                lightboxContent.insertBefore(img, captionEl);
+
+                if (captions[item.number]) {
+                    captionEl.textContent = captions[item.number];
+                    captionEl.classList.add('visible');
+                }
+            }
+
+            lightbox.classList.add('active');
+        }
+
+        function nextSlide() {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex + 1) % mediaList.length;
+            showMedia(currentIndex);
+        }
+
+        function prevSlide() {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex - 1 + mediaList.length) % mediaList.length;
+            showMedia(currentIndex);
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            lightboxContent.innerHTML = '';
+            const caption = document.createElement('div');
+            caption.className = 'lightbox-caption';
+            caption.id = 'lightboxCaption';
+            lightboxContent.appendChild(caption);
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
+        document.getElementById('prevBtn').addEventListener('click', e => { e.stopPropagation(); prevSlide(); });
+        document.getElementById('closeBtn').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+        document.addEventListener('keydown', e => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        // Запуск
+        loadAllImages();
+    </script>
+</body>
+</html>
