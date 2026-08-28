@@ -19,7 +19,7 @@
             font-weight: 300;
             letter-spacing: 3px;
             text-transform: uppercase;
-            font-size: 28px;
+            font-size: 26px;
             user-select: none;
         }
         .gallery-grid {
@@ -157,7 +157,7 @@
     </style>
 </head>
 <body>
-    <h1 class="site-title">AzArt</h1>
+    <h1 class="site-title">Portfolio</h1>
 
     <div class="gallery-grid" id="gallery"></div>
 
@@ -181,15 +181,13 @@
         // ============================================
         //  НАСТРОЙКИ
         // ============================================
-        const TOTAL_IMAGES_COUNT = 130;   // с запасом
+        const TOTAL_IMAGES_COUNT = 130;
 
-        // Видео
         const videoInserts = [
             { after: 6,  url: 'https://www.youtube.com/watch?v=GW5wS4xtw6o' },
             { after: 11, url: 'https://www.youtube.com/watch?v=wv0ulLgPbAo' },
         ];
 
-        // Надписи
         const captions = {
             3: "Из бука гнутые ножки",
         };
@@ -265,9 +263,6 @@
 
         function buildFinalGallery() {
             const imageNumbers = Object.keys(loadedImages).map(Number).sort((a, b) => a - b);
-
-            console.log('Найдено фото:', imageNumbers.length);
-            console.log('Номера:', imageNumbers.join(', '));
 
             const tempList = imageNumbers.map(num => ({
                 type: 'image',
