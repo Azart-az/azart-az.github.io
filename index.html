@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Azart</title>
+    <title>Эксклюзивный Интерьер и Мебель</title>
     <style>
         body {
             margin: 0;
@@ -181,7 +181,7 @@
         // ============================================
         //  НАСТРОЙКИ
         // ============================================
-        const TOTAL_IMAGES_COUNT = 120;
+        const TOTAL_IMAGES_COUNT = 120;   // с запасом
 
         // Видео
         const videoInserts = [
@@ -189,15 +189,10 @@
             { after: 11, url: 'https://www.youtube.com/watch?v=wv0ulLgPbAo' },
         ];
 
-        // =======================================================
-        //  ЗДЕСЬ ПИШИ НАДПИСИ К ФОТО
-        //  Просто добавляй новые строки по такому же принципу
-        // =======================================================
+        // Надписи (плашка внизу)
         const captions = {
             3: "Из бука гнутые ножки",
-            8: "Тоже из бука гнутье под паром"
         };
-        // =======================================================
 
         // ============================================
 
@@ -222,34 +217,37 @@
             return null;
         }
 
-        function tryLoadImage(i) {
-            if (i > TOTAL_IMAGES_COUNT) {
-                buildFinalGallery();
-                return;
-            }
+        // Быстрая параллельная загрузка всех фото
+        function loadAllImages() {
+            let checked = 0;
+            const totalToCheck = TOTAL_IMAGES_COUNT;
 
-            const formats = [`images/${i}.jpg`, `images/${i}.jpeg`, `images/${i}.png`, `images/${i}.webp`];
-            let formatIndex = 0;
+            for (let i = 1; i <= TOTAL_IMAGES_COUNT; i++) {
+                const formats = [`images/${i}.jpg`, `images/${i}.jpeg`, `images/${i}.png`, `images/${i}.webp`];
+                let found = false;
 
-            function checkNext() {
-                if (formatIndex >= formats.length) {
-                    tryLoadImage(i + 1);
-                    return;
-                }
+                const tryFormat = (formatIndex) => {
+                    if (formatIndex >= formats.length) {
+                        checked++;
+                        if (checked === totalToCheck) buildFinalGallery();
+                        return;
+                    }
 
-                const path = formats[formatIndex];
-                const img = new Image();
-                img.onload = () => {
-                    loadedImages[i] = path;
-                    tryLoadImage(i + 1);
+                    const path = formats[formatIndex];
+                    const img = new Image();
+                    img.onload = () => {
+                        loadedImages[i] = path;
+                        checked++;
+                        if (checked === totalToCheck) buildFinalGallery();
+                    };
+                    img.onerror = () => {
+                        tryFormat(formatIndex + 1);
+                    };
+                    img.src = path;
                 };
-                img.onerror = () => {
-                    formatIndex++;
-                    checkNext();
-                };
-                img.src = path;
+
+                tryFormat(0);
             }
-            checkNext();
         }
 
         function buildFinalGallery() {
@@ -288,6 +286,9 @@
 
             mediaList = tempList;
 
+            // Очищаем галерею на всякий случай
+            gallery.innerHTML = '';
+
             mediaList.forEach((item, index) => {
                 const a = document.createElement('a');
                 a.className = 'gallery-item';
@@ -298,99 +299,4 @@
                 img.loading = 'lazy';
 
                 if (item.type === 'video') {
-                    a.classList.add('video');
-                    img.src = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
-                    img.alt = 'Видео';
-                } else {
-                    img.src = item.src;
-                    img.alt = `Фото ${item.number}`;
-                }
-
-                a.appendChild(img);
-
-                a.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    currentIndex = index;
-                    showMedia(currentIndex);
-                });
-
-                gallery.appendChild(a);
-            });
-        }
-
-        function showMedia(index) {
-            if (!mediaList[index]) return;
-
-            const item = mediaList[index];
-
-            const captionEl = lightboxCaption;
-            lightboxContent.innerHTML = '';
-            lightboxContent.appendChild(captionEl);
-
-            captionEl.textContent = '';
-            captionEl.classList.remove('visible');
-
-            if (item.type === 'video') {
-                const iframe = document.createElement('iframe');
-                iframe.src = `https://www.youtube-nocookie.com/embed/${item.id}?autoplay=1&rel=0`;
-                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-                iframe.allowFullscreen = true;
-                iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-                iframe.setAttribute('frameborder', '0');
-                lightboxContent.insertBefore(iframe, captionEl);
-
-                if (item.after && captions[item.after]) {
-                    captionEl.textContent = captions[item.after];
-                    captionEl.classList.add('visible');
-                }
-            } else {
-                const img = document.createElement('img');
-                img.src = item.src;
-                lightboxContent.insertBefore(img, captionEl);
-
-                if (captions[item.number]) {
-                    captionEl.textContent = captions[item.number];
-                    captionEl.classList.add('visible');
-                }
-            }
-
-            lightbox.classList.add('active');
-        }
-
-        function nextSlide() {
-            if (mediaList.length === 0) return;
-            currentIndex = (currentIndex + 1) % mediaList.length;
-            showMedia(currentIndex);
-        }
-
-        function prevSlide() {
-            if (mediaList.length === 0) return;
-            currentIndex = (currentIndex - 1 + mediaList.length) % mediaList.length;
-            showMedia(currentIndex);
-        }
-
-        function closeLightbox() {
-            lightbox.classList.remove('active');
-            lightboxContent.innerHTML = '';
-            const caption = document.createElement('div');
-            caption.className = 'lightbox-caption';
-            caption.id = 'lightboxCaption';
-            lightboxContent.appendChild(caption);
-        }
-
-        document.getElementById('nextBtn').addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
-        document.getElementById('prevBtn').addEventListener('click', e => { e.stopPropagation(); prevSlide(); });
-        document.getElementById('closeBtn').addEventListener('click', closeLightbox);
-        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
-
-        document.addEventListener('keydown', e => {
-            if (!lightbox.classList.contains('active')) return;
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') prevSlide();
-            if (e.key === 'Escape') closeLightbox();
-        });
-
-        tryLoadImage(1);
-    </script>
-</body>
-</html>
+                    a
