@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Эксклюзивный Интерьер и Мебель</title>
+    <title>Azart</title>
     <style>
         body {
             margin: 0;
@@ -92,12 +92,10 @@
             top: 0; left: 0; width: 100vw; height: 100vh;
             background-color: rgba(10, 10, 10, 0.96);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            justify-content: center; align-items: center;
         }
         .js-lightbox.active { display: flex; }
         .lightbox-content {
-            position: relative;
             max-width: 90vw;
             max-height: 85vh;
             display: flex;
@@ -109,34 +107,14 @@
             max-height: 85vh;
             object-fit: contain;
             user-select: none;
-            display: block;
         }
         .lightbox-content iframe {
             width: 90vw;
             max-width: 960px;
-            height: 50.625vw;
+            height: 54vw;
             max-height: 85vh;
             border: none;
             border-radius: 4px;
-            display: block;
-        }
-        .lightbox-caption {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0, 0, 0, 0.65);
-            color: #fff;
-            text-align: center;
-            padding: 14px 20px;
-            font-size: 16px;
-            font-weight: 300;
-            line-height: 1.4;
-            backdrop-filter: blur(4px);
-            display: none;
-        }
-        .lightbox-caption.visible {
-            display: block;
         }
         .l-btn {
             position: absolute;
@@ -171,9 +149,7 @@
     <div id="lightbox" class="js-lightbox">
         <div class="l-btn l-close" id="closeBtn">✕</div>
         <div class="l-btn l-prev" id="prevBtn">❮</div>
-        <div class="lightbox-content" id="lightboxContent">
-            <div class="lightbox-caption" id="lightboxCaption"></div>
-        </div>
+        <div class="lightbox-content" id="lightboxContent"></div>
         <div class="l-btn l-next" id="nextBtn">❯</div>
     </div>
 
@@ -183,29 +159,16 @@
         // ============================================
         const TOTAL_IMAGES_COUNT = 70;
 
-        // Видео
         const videoInserts = [
             { after: 6,  url: 'https://www.youtube.com/watch?v=GW5wS4xtw6o' },
             { after: 11, url: 'https://www.youtube.com/watch?v=wv0ulLgPbAo' },
         ];
-
-        // =======================================================
-        //  ЗДЕСЬ ПИШИ НАДПИСИ К ФОТО
-        //  Просто добавляй новые строки по такому же принципу
-        // =======================================================
-        const captions = {
-            3: "Из бука гнутые ножки",
-	6: " Тот же самый бук, толкько вареный",
-	   34: "Лестница из ореха",
-        };
-        // =======================================================
 
         // ============================================
 
         const gallery = document.getElementById('gallery');
         const lightbox = document.getElementById('lightbox');
         const lightboxContent = document.getElementById('lightboxContent');
-        const lightboxCaption = document.getElementById('lightboxCaption');
 
         let mediaList = [];
         let currentIndex = 0;
@@ -271,8 +234,7 @@
                 const videoItem = {
                     type: 'video',
                     id: videoId,
-                    src: insert.url,
-                    after: insert.after
+                    src: insert.url
                 };
 
                 if (insert.after === 0) {
@@ -323,13 +285,7 @@
             if (!mediaList[index]) return;
 
             const item = mediaList[index];
-
-            const captionEl = lightboxCaption;
             lightboxContent.innerHTML = '';
-            lightboxContent.appendChild(captionEl);
-
-            captionEl.textContent = '';
-            captionEl.classList.remove('visible');
 
             if (item.type === 'video') {
                 const iframe = document.createElement('iframe');
@@ -338,21 +294,11 @@
                 iframe.allowFullscreen = true;
                 iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
                 iframe.setAttribute('frameborder', '0');
-                lightboxContent.insertBefore(iframe, captionEl);
-
-                if (item.after && captions[item.after]) {
-                    captionEl.textContent = captions[item.after];
-                    captionEl.classList.add('visible');
-                }
+                lightboxContent.appendChild(iframe);
             } else {
                 const img = document.createElement('img');
                 img.src = item.src;
-                lightboxContent.insertBefore(img, captionEl);
-
-                if (captions[item.number]) {
-                    captionEl.textContent = captions[item.number];
-                    captionEl.classList.add('visible');
-                }
+                lightboxContent.appendChild(img);
             }
 
             lightbox.classList.add('active');
@@ -373,10 +319,6 @@
         function closeLightbox() {
             lightbox.classList.remove('active');
             lightboxContent.innerHTML = '';
-            const caption = document.createElement('div');
-            caption.className = 'lightbox-caption';
-            caption.id = 'lightboxCaption';
-            lightboxContent.appendChild(caption);
         }
 
         document.getElementById('nextBtn').addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
