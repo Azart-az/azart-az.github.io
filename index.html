@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <title>Эксклюзивный Интерьер и Мебель</title>
+    <title>AzArt</title>
     <style>
         body {
             margin: 0;
@@ -17,9 +17,9 @@
             margin-bottom: 40px;
             color: #222;
             font-weight: 300;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            font-size: 24px;
+            font-size: 28px;
             user-select: none;
         }
         .gallery-grid {
@@ -83,7 +83,7 @@
         .btn-telegram { background-color: #0088cc; }
         @media (max-width: 600px) {
             .gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-            .site-title { font-size: 18px; margin-bottom: 25px; }
+            .site-title { font-size: 22px; margin-bottom: 25px; }
             .contact-btn { width: 100%; justify-content: center; }
         }
         .js-lightbox {
@@ -157,7 +157,7 @@
     </style>
 </head>
 <body>
-    <h1 class="site-title">Portfolio</h1>
+    <h1 class="site-title">AzArt</h1>
 
     <div class="gallery-grid" id="gallery"></div>
 
@@ -181,7 +181,7 @@
         // ============================================
         //  НАСТРОЙКИ
         // ============================================
-        const TOTAL_IMAGES_COUNT = 120;   // с запасом
+        const TOTAL_IMAGES_COUNT = 130;   // с запасом
 
         // Видео
         const videoInserts = [
@@ -189,7 +189,7 @@
             { after: 11, url: 'https://www.youtube.com/watch?v=wv0ulLgPbAo' },
         ];
 
-        // Надписи (плашка внизу)
+        // Надписи
         const captions = {
             3: "Из бука гнутые ножки",
         };
@@ -217,41 +217,57 @@
             return null;
         }
 
-        // Быстрая параллельная загрузка всех фото
         function loadAllImages() {
             let checked = 0;
             const totalToCheck = TOTAL_IMAGES_COUNT;
 
             for (let i = 1; i <= TOTAL_IMAGES_COUNT; i++) {
-                const formats = [`images/${i}.jpg`, `images/${i}.jpeg`, `images/${i}.png`, `images/${i}.webp`];
-                let found = false;
-
-                const tryFormat = (formatIndex) => {
-                    if (formatIndex >= formats.length) {
-                        checked++;
-                        if (checked === totalToCheck) buildFinalGallery();
-                        return;
+                checkImage(i, () => {
+                    checked++;
+                    if (checked === totalToCheck) {
+                        buildFinalGallery();
                     }
-
-                    const path = formats[formatIndex];
-                    const img = new Image();
-                    img.onload = () => {
-                        loadedImages[i] = path;
-                        checked++;
-                        if (checked === totalToCheck) buildFinalGallery();
-                    };
-                    img.onerror = () => {
-                        tryFormat(formatIndex + 1);
-                    };
-                    img.src = path;
-                };
-
-                tryFormat(0);
+                });
             }
+        }
+
+        function checkImage(num, callback) {
+            const formats = [
+                `images/${num}.jpg`,
+                `images/${num}.jpeg`,
+                `images/${num}.JPG`,
+                `images/${num}.JPEG`,
+                `images/${num}.png`,
+                `images/${num}.webp`
+            ];
+
+            let idx = 0;
+
+            function tryNext() {
+                if (idx >= formats.length) {
+                    callback();
+                    return;
+                }
+                const path = formats[idx];
+                const img = new Image();
+                img.onload = function() {
+                    loadedImages[num] = path;
+                    callback();
+                };
+                img.onerror = function() {
+                    idx++;
+                    tryNext();
+                };
+                img.src = path;
+            }
+            tryNext();
         }
 
         function buildFinalGallery() {
             const imageNumbers = Object.keys(loadedImages).map(Number).sort((a, b) => a - b);
+
+            console.log('Найдено фото:', imageNumbers.length);
+            console.log('Номера:', imageNumbers.join(', '));
 
             const tempList = imageNumbers.map(num => ({
                 type: 'image',
@@ -285,8 +301,6 @@
             });
 
             mediaList = tempList;
-
-            // Очищаем галерею на всякий случай
             gallery.innerHTML = '';
 
             mediaList.forEach((item, index) => {
@@ -317,8 +331,6 @@
 
                 gallery.appendChild(a);
             });
-
-            console.log('Загружено фото:', imageNumbers.length);
         }
 
         function showMedia(index) {
@@ -392,7 +404,6 @@
             if (e.key === 'Escape') closeLightbox();
         });
 
-        // Запуск
         loadAllImages();
     </script>
 </body>
