@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Azart</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 30px 10px;
+            background-color: #fcfcfc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .site-title {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #222;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 24px;
+            user-select: none;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            max-width: 950px;
+            margin: 0 auto 50px auto;
+        }
+        .gallery-item {
+            aspect-ratio: 1 / 1;
+            border: 1px solid #dbdbdb;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            display: none;
+        }
+        .gallery-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .gallery-item.video::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: rgba(0,0,0,0.75) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E") center/28px no-repeat;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .contacts-footer {
+            text-align: center;
+            padding: 30px 10px;
+            border-top: 1px solid #eee;
+            max-width: 950px;
+            margin: 0 auto;
+        }
+        .contacts-title { font-size: 18px; color: #444; margin-bottom: 20px; font-weight: 400; }
+        .contacts-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .contact-btn {
+            display: inline-flex; align-items: center; padding: 12px 24px; border-radius: 25px;
+            text-decoration: none; color: white; font-size: 15px; font-weight: 500;
+            transition: transform 0.2s, opacity 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .contact-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+        .btn-phone { background-color: #444; }
+        .btn-whatsapp { background-color: #25D366; }
+        .btn-telegram { background-color: #0088cc; }
+        @media (max-width: 600px) {
+            .gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            .site-title { font-size: 18px; margin-bottom: 25px; }
+            .contact-btn { width: 100%; justify-content: center; }
+        }
+        .js-lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(10, 10, 10, 0.96);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .js-lightbox.active { display: flex; }
+        .lightbox-content {
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .lightbox-content img {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            user-select: none;
+        }
+        .lightbox-content iframe {
+            width: 90vw;
+            max-width: 960px;
+            height: 54vw;
+            max-height: 85vh;
+            border: none;
+            border-radius: 4px;
+        }
+        .l-btn {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 28px;
+            padding: 15px 20px;
+            cursor: pointer;
+            border-radius: 6px;
+            z-index: 1010;
+            user-select: none;
+        }
+        .l-btn:hover { background: rgba(0, 0, 0, 0.8); }
+        .l-close { top: 20px; right: 20px; font-size: 22px; padding: 10px 15px; }
+        .l-prev { left: 20px; top: 50%; transform: translateY(-50%); }
+        .l-next { right: 20px; top: 50%; transform: translateY(-50%); }
+    </style>
+</head>
+<body>
+    <h1 class="site-title">Portfolio</h1>
+
+    <div class="gallery-grid" id="gallery"></div>
+
+    <footer class="contacts-footer">
+        <div class="contacts-title"></div>
+        <div class="contacts-buttons">
+            <a href="https://wa.me" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>
+        </div>
+    </footer>
+
+    <div id="lightbox" class="js-lightbox">
+        <div class="l-btn l-close" id="closeBtn">✕</div>
+        <div class="l-btn l-prev" id="prevBtn">❮</div>
+        <div class="lightbox-content" id="lightboxContent"></div>
+        <div class="l-btn l-next" id="nextBtn">❯</div>
+    </div>
+
+    <script>
+        // ============================================
+        //  НАСТРОЙКИ
+        // ============================================
+        const TOTAL_IMAGES_COUNT = 70;
+
+        const videoInserts = [
+            { after: 6,  url: 'https://www.youtube.com/watch?v=GW5wS4xtw6o' },
+            { after: 11, url: 'https://www.youtube.com/watch?v=wv0ulLgPbAo' },
+        ];
+
+        // ============================================
+
+        const gallery = document.getElementById('gallery');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxContent = document.getElementById('lightboxContent');
+
+        let mediaList = [];
+        let currentIndex = 0;
+        const loadedImages = {};
+
+        function getYouTubeId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+                /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/
+            ];
+            for (const p of patterns) {
+                const m = url.match(p);
+                if (m) return m[1];
+            }
+            return null;
+        }
+
+        function tryLoadImage(i) {
+            if (i > TOTAL_IMAGES_COUNT) {
+                buildFinalGallery();
+                return;
+            }
+
+            const formats = [`images/${i}.jpg`, `images/${i}.jpeg`, `images/${i}.png`, `images/${i}.webp`];
+            let formatIndex = 0;
+
+            function checkNext() {
+                if (formatIndex >= formats.length) {
+                    tryLoadImage(i + 1);
+                    return;
+                }
+
+                const path = formats[formatIndex];
+                const img = new Image();
+                img.onload = () => {
+                    loadedImages[i] = path;
+                    tryLoadImage(i + 1);
+                };
+                img.onerror = () => {
+                    formatIndex++;
+                    checkNext();
+                };
+                img.src = path;
+            }
+            checkNext();
+        }
+
+        function buildFinalGallery() {
+            const imageNumbers = Object.keys(loadedImages).map(Number).sort((a, b) => a - b);
+
+            const tempList = imageNumbers.map(num => ({
+                type: 'image',
+                src: loadedImages[num],
+                number: num
+            }));
+
+            const inserts = [...videoInserts].sort((a, b) => b.after - a.after);
+
+            inserts.forEach(insert => {
+                const videoId = getYouTubeId(insert.url);
+                if (!videoId) return;
+
+                const videoItem = {
+                    type: 'video',
+                    id: videoId,
+                    src: insert.url
+                };
+
+                if (insert.after === 0) {
+                    tempList.unshift(videoItem);
+                } else {
+                    const pos = tempList.findIndex(item => item.type === 'image' && item.number === insert.after);
+                    if (pos !== -1) {
+                        tempList.splice(pos + 1, 0, videoItem);
+                    } else {
+                        tempList.push(videoItem);
+                    }
+                }
+            });
+
+            mediaList = tempList;
+
+            mediaList.forEach((item, index) => {
+                const a = document.createElement('a');
+                a.className = 'gallery-item';
+                a.style.display = 'block';
+                a.dataset.index = index;
+
+                const img = document.createElement('img');
+                img.loading = 'lazy';
+
+                if (item.type === 'video') {
+                    a.classList.add('video');
+                    img.src = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
+                    img.alt = 'Видео';
+                } else {
+                    img.src = item.src;
+                    img.alt = `Фото ${item.number}`;
+                }
+
+                a.appendChild(img);
+
+                a.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentIndex = index;
+                    showMedia(currentIndex);
+                });
+
+                gallery.appendChild(a);
+            });
+        }
+
+        function showMedia(index) {
+            if (!mediaList[index]) return;
+
+            const item = mediaList[index];
+            lightboxContent.innerHTML = '';
+
+            if (item.type === 'video') {
+                const iframe = document.createElement('iframe');
+                iframe.src = `https://www.youtube-nocookie.com/embed/${item.id}?autoplay=1&rel=0`;
+                iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                iframe.allowFullscreen = true;
+                iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                iframe.setAttribute('frameborder', '0');
+                lightboxContent.appendChild(iframe);
+            } else {
+                const img = document.createElement('img');
+                img.src = item.src;
+                lightboxContent.appendChild(img);
+            }
+
+            lightbox.classList.add('active');
+        }
+
+        function nextSlide() {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex + 1) % mediaList.length;
+            showMedia(currentIndex);
+        }
+
+        function prevSlide() {
+            if (mediaList.length === 0) return;
+            currentIndex = (currentIndex - 1 + mediaList.length) % mediaList.length;
+            showMedia(currentIndex);
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            lightboxContent.innerHTML = '';
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
+        document.getElementById('prevBtn').addEventListener('click', e => { e.stopPropagation(); prevSlide(); });
+        document.getElementById('closeBtn').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+
+        document.addEventListener('keydown', e => {
+            if (!lightbox.classList.contains('active')) return;
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'Escape') closeLightbox();
+        });
+
+        tryLoadImage(1);
+    </script>
+</body>
+</html>
