@@ -251,27 +251,45 @@
         }
 
         function checkImage(num, callback) {
+            // Сначала ищем превью в thumbs, потом полную версию в images
             const formats = [
+                `thumbs/${num}.jpg`,
+                `thumbs/${num}.jpeg`,
+                `thumbs/${num}.JPG`,
+                `thumbs/${num}.JPEG`,
                 `images/${num}.jpg`,
                 `images/${num}.jpeg`,
                 `images/${num}.JPG`,
-                `images/${num}.JPEG`,
-                `images/${num}.png`,
-                `images/${num}.webp`
+                `images/${num}.JPEG`
             ];
 
             let idx = 0;
+            let foundThumb = null;
+            let foundFull = null;
 
             function tryNext() {
                 if (idx >= formats.length) {
+                    if (foundThumb || foundFull) {
+                        loadedImages[num] = {
+                            thumb: foundThumb || foundFull,
+                            full: foundFull || foundThumb
+                        };
+                    }
                     callback();
                     return;
                 }
+
                 const path = formats[idx];
                 const img = new Image();
                 img.onload = function() {
-                    loadedImages[num] = path;
-                    callback();
+                    if (path.startsWith('thumbs/')) {
+                        foundThumb = path;
+                    } else {
+                        foundFull = path;
+                    }
+                    // Продолжаем искать, чтобы найти оба варианта
+                    idx++;
+                    tryNext();
                 };
                 img.onerror = function() {
                     idx++;
@@ -287,7 +305,8 @@
 
             const tempList = imageNumbers.map(num => ({
                 type: 'image',
-                src: loadedImages[num],
+                src: loadedImages[num].thumb,   // лёгкое превью для сетки
+                full: loadedImages[num].full,   // полная версия для лайтбокса
                 number: num
             }));
 
@@ -333,7 +352,7 @@
                     img.src = `https://img.youtube.com/vi/${item.id}/hqdefault.jpg`;
                     img.alt = 'Видео';
                 } else {
-                    img.src = item.src;
+                    img.src = item.src;          // превью из thumbs
                     img.alt = `Фото ${item.number}`;
                 }
 
@@ -375,7 +394,7 @@
                 }
             } else {
                 const img = document.createElement('img');
-                img.src = item.src;
+                img.src = item.full || item.src;   // полная версия из images
                 lightboxContent.insertBefore(img, captionEl);
 
                 if (captions[item.number]) {
