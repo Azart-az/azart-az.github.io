@@ -154,6 +154,33 @@
         .l-close { top: 20px; right: 20px; font-size: 22px; padding: 10px 15px; }
         .l-prev { left: 20px; top: 50%; transform: translateY(-50%); }
         .l-next { right: 20px; top: 50%; transform: translateY(-50%); }
+
+        /* Маленькая плавающая кнопка WhatsApp */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 52px;
+            height: 52px;
+            background-color: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+            z-index: 999;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+        }
+        .whatsapp-float:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+        }
+        .whatsapp-float svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
     </style>
 </head>
 <body>
@@ -164,9 +191,16 @@
     <footer class="contacts-footer">
         <div class="contacts-title"></div>
         <div class="contacts-buttons">
-            <a href="https://wa.me" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>
+            <!-- старую кнопку можно оставить или убрать -->
         </div>
     </footer>
+
+    <!-- Маленькая плавающая кнопка WhatsApp -->
+    <a href="https://wa.me" target="_blank" class="whatsapp-float" title="Написать в WhatsApp">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.004 2.586c-7.364 0-13.336 5.972-13.336 13.336 0 2.352.618 4.648 1.79 6.668L2.59 29.414l6.996-1.834c1.94 1.058 4.124 1.616 6.418 1.616h.004c7.36 0 13.332-5.972 13.332-13.336S23.368 2.586 16.004 2.586zM16.01 26.93h-.004c-1.99 0-3.936-.534-5.64-1.546l-.404-.24-4.152 1.088 1.108-4.048-.264-.416a11.08 11.08 0 01-1.694-5.886c0-6.136 4.992-11.128 11.132-11.128 2.972 0 5.766 1.158 7.868 3.26a11.06 11.06 0 013.256 7.868c0 6.136-4.992 11.128-11.128 11.128zm6.104-8.34c-.334-.168-1.98-.978-2.288-1.09-.308-.112-.532-.168-.756.168-.224.334-.868 1.09-1.064 1.314-.196.224-.392.252-.726.084-.334-.168-1.41-.52-2.686-1.656-1-.89-1.674-1.99-1.87-2.324-.196-.334-.02-.514.148-.68.152-.15.334-.392.5-.588.168-.196.224-.334.334-.558.112-.224.056-.42-.028-.588-.084-.168-.756-1.822-1.036-2.494-.272-.654-.55-.566-.756-.576l-.644-.012c-.224 0-.588.084-.896.42-.308.334-1.176 1.15-1.176 2.804s1.204 3.25 1.372 3.474c.168.224 2.37 3.62 5.74 5.076.802.346 1.428.554 1.916.708.806.256 1.54.22 2.12.134.646-.098 1.98-.81 2.26-1.592.28-.784.28-1.456.196-1.592-.084-.14-.308-.224-.642-.392z"/>
+        </svg>
+    </a>
 
     <div id="lightbox" class="js-lightbox">
         <div class="l-btn l-close" id="closeBtn">✕</div>
@@ -182,7 +216,6 @@
         //  НАСТРОЙКИ
         // ============================================
         
-        // Только существующие номера
         const EXISTING_IMAGES = [
             1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
             21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
@@ -246,7 +279,6 @@
             const total = EXISTING_IMAGES.length;
 
             EXISTING_IMAGES.forEach(num => {
-                // Пробуем только самые вероятные варианты и сразу останавливаемся
                 const candidates = [
                     `thumbs/${num}.jpg`,
                     `thumbs/${num}.JPG`,
