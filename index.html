@@ -182,7 +182,7 @@
         //  НАСТРОЙКИ
         // ============================================
         
-        // Только реально существующие номера (убраны пустые)
+        // Только существующие номера
         const EXISTING_IMAGES = [
             1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,
             21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,
@@ -243,68 +243,48 @@
 
         function loadAllImages() {
             let checked = 0;
-            const totalToCheck = EXISTING_IMAGES.length;
+            const total = EXISTING_IMAGES.length;
 
             EXISTING_IMAGES.forEach(num => {
-                checkImage(num, () => {
-                    checked++;
-                    if (checked === totalToCheck) {
-                        buildFinalGallery();
+                // Пробуем только самые вероятные варианты и сразу останавливаемся
+                const candidates = [
+                    `thumbs/${num}.jpg`,
+                    `thumbs/${num}.JPG`,
+                    `thumbs/${num}.jpeg`,
+                    `images/${num}.jpg`,
+                    `images/${num}.JPG`
+                ];
+
+                let found = false;
+                let i = 0;
+
+                function tryNext() {
+                    if (found || i >= candidates.length) {
+                        checked++;
+                        if (checked === total) buildFinalGallery();
+                        return;
                     }
-                });
-            });
-        }
 
-        function checkImage(num, callback) {
-            // Сначала thumbs, потом images. Останавливаемся при первом найденном.
-            const candidates = [
-                `thumbs/${num}.jpg`,
-                `thumbs/${num}.JPG`,
-                `images/${num}.jpg`,
-                `images/${num}.JPG`,
-                `thumbs/${num}.jpeg`,
-                `images/${num}.jpeg`
-            ];
-
-            let idx = 0;
-
-            function tryNext() {
-                if (idx >= candidates.length) {
-                    callback();
-                    return;
-                }
-
-                const path = candidates[idx];
-                const img = new Image();
-                img.onload = function() {
-                    const isThumb = path.startsWith('thumbs/');
-                    loadedImages[num] = {
-                        thumb: isThumb ? path : path.replace('images/', 'thumbs/'),
-                        full: isThumb ? path.replace('thumbs/', 'images/') : path
+                    const path = candidates[i];
+                    const img = new Image();
+                    img.onload = function() {
+                        found = true;
+                        const isThumb = path.startsWith('thumbs/');
+                        loadedImages[num] = {
+                            thumb: isThumb ? path : path.replace('images/', 'thumbs/'),
+                            full: isThumb ? path.replace('thumbs/', 'images/') : path
+                        };
+                        checked++;
+                        if (checked === total) buildFinalGallery();
                     };
-                    // Если нашли thumbs — пробуем ещё найти полную версию быстро
-                    if (isThumb) {
-                        const fullPath = path.replace('thumbs/', 'images/');
-                        const fullImg = new Image();
-                        fullImg.onload = function() {
-                            loadedImages[num].full = fullPath;
-                            callback();
-                        };
-                        fullImg.onerror = function() {
-                            callback();
-                        };
-                        fullImg.src = fullPath;
-                    } else {
-                        callback();
-                    }
-                };
-                img.onerror = function() {
-                    idx++;
-                    tryNext();
-                };
-                img.src = path;
-            }
-            tryNext();
+                    img.onerror = function() {
+                        i++;
+                        tryNext();
+                    };
+                    img.src = path;
+                }
+                tryNext();
+            });
         }
 
         function buildFinalGallery() {
